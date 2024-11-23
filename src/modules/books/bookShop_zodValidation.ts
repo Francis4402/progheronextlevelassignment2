@@ -21,4 +21,4 @@ const orderValidationSchema = z.object({
     totalPrice: z.number(),
 })
 
-export default [bookValidationSchema, orderValidationSchema];
+export { bookValidationSchema, orderValidationSchema };
