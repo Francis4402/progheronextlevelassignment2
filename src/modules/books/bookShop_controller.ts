@@ -12,7 +12,7 @@ const storeBooks = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-      message: 'Books added successfully',
+      message: 'Book created successfully',
       data: result,
     });
   } catch (error) {
@@ -24,22 +24,60 @@ const storeBooks = async (req: Request, res: Response) => {
   }
 };
 
-const getBooks = async (req: Request, res: Response) => {
+const getAllBooks = async (req: Request, res: Response) => {
     try {
         const result = await BookShopServices.getBooksFromDB();
 
         res.status(200).json({
-            success: true,
-            message: 'Books fetched successfully',
+            status: true,
+            message: 'Books retrieved successfully',
             data: result,
         })
     } catch (error) {
         res.status(500).json({
-            success: false,
+            status: false,
+            message: (error as Error).message || 'something went wrong',
+            error: error,
+        })
+    }
+};
+
+const getBooksById = async (req: Request, res: Response) => {
+    try {
+        const {productId: id} = req.params;
+        const result = await BookShopServices.getBooksByIdFromDB(id);
+
+        res.status(200).json({
+            status: true,
+            message: 'Books retrieved successfully',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: (error as Error).message || 'something went wrong',
+            error: error,
+        })
+    }
+};
+
+const deleteBooksById = async (req: Request, res: Response) => {
+    try {
+        const {productId: id} = req.params;
+        const result = await BookShopServices.deleteBooksByIdFromDB(id);
+
+        res.status(200).json({
+            status: true,
+            message: 'Books retrieved successfully',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
             message: (error as Error).message || 'something went wrong',
             error: error,
         })
     }
 }
 
-export const BookShopController = { storeBooks , getBooks};
+export const BookShopController = { storeBooks , getAllBooks, getBooksById, deleteBooksById };

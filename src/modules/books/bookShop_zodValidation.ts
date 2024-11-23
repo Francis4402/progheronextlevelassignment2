@@ -8,6 +8,9 @@ const bookValidationSchema = z.object({
     description: z.string().max(225, {message: "Description must be less than 225 characters"}),
     quantity: z.number(),
     inStock: z.boolean().default(true),
+}).extend({
+    createdAt: z.date().optional(),
+    updatedAt: z.date().optional(),
 })
 
 const orderValidationSchema = z.object({

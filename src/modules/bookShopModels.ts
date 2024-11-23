@@ -8,13 +8,13 @@ import {
 
 const bookSchema = new Schema<Book, BookShopModel>({
   title: { type: String, required: [true, 'Title is required'], unique: true },
-  author: { type: String, required: [true, 'Author is required'] },
-  price: { type: Number, required: [true, 'Price is required'] },
+  author: { type: String, required: [true, 'Author is required'], unique: true },
+  price: { type: Number, required: [true, 'Price is required']},
   category: { type: String, required: [true, 'Category is required'] },
   description: { type: String, required: [true, 'Description is required'] },
   quantity: { type: Number, required: [true, 'Quantity is required'] },
   inStock: { type: Boolean, required: [true, 'InStock is required'] },
-});
+}, {timestamps: true});
 
 const orderSchema = new Schema<Order, OrderShopModel>({
   email: { type: String, required: [true, 'Email is required'] },
@@ -32,6 +32,15 @@ bookSchema.methods.isUserExists = async function (id: string) {
   const existingUser = await Books.findOne({ id: id });
   return existingUser;
 };
+
+bookSchema.pre('save', async function (next) {
+    const now = new Date();
+    this.updatedAt = now;
+    if(!this.createdAt) {
+        this.createdAt = now;
+    }
+    next();
+})
 
 orderSchema.methods.isOrderExists = async function (id: string) {
   const existingOrder = await Orders.findOne({ _id: id });
