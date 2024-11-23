@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { BookShopServices } from './bookShop_services';
-import { bookValidationSchema } from './bookShop_zodValidation';
+import { bookValidationSchema } from '../zodValidations/zodValidation';
 
 const storeBooks = async (req: Request, res: Response) => {
   try {
@@ -26,7 +26,10 @@ const storeBooks = async (req: Request, res: Response) => {
 
 const getAllBooks = async (req: Request, res: Response) => {
     try {
-        const result = await BookShopServices.getBooksFromDB();
+
+        const searchTerm = req.query.searchTerm as string;
+
+        const result = await BookShopServices.getBooksFromDB(searchTerm);
 
         res.status(200).json({
             status: true,
@@ -61,6 +64,27 @@ const getBooksById = async (req: Request, res: Response) => {
     }
 };
 
+const updateBooksById = async (req: Request, res: Response) => {
+    try {
+        const {productId: id} = req.params;
+        const {books} = req.body;
+
+        const result = await BookShopServices.updateBooksByIdFromDB(id, books);
+
+        res.status(200).json({
+            status: true,
+            message: 'Books updated successfully',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: (error as Error).message || 'something went wrong',
+            error: error,
+        })
+    }
+};
+
 const deleteBooksById = async (req: Request, res: Response) => {
     try {
         const {productId: id} = req.params;
@@ -78,6 +102,6 @@ const deleteBooksById = async (req: Request, res: Response) => {
             error: error,
         })
     }
-}
+};
 
-export const BookShopController = { storeBooks , getAllBooks, getBooksById, deleteBooksById };
+export const BookShopController = { storeBooks , getAllBooks, getBooksById, updateBooksById, deleteBooksById };

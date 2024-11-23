@@ -9,6 +9,8 @@ router.get('/', BookShopController.getAllBooks);
 
 router.get('/:productId', BookShopController.getBooksById);
 
+router.put('/:productId', BookShopController.updateBooksById);
+
 router.delete('/:productId', BookShopController.deleteBooksById);
 
 
