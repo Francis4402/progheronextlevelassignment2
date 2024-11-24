@@ -41,6 +41,12 @@ const storeOrdersIntoDB = async (order: Order, res: Response) => {
   return result;
 };
 
+const getAllOrdersFromDB = async () => {
+  const orders = await OrdersModel.find();
+
+  return orders;
+}
+
 const getOrdersFromDB = async () => {
   try {
     const revenueData = await OrdersModel.aggregate([
@@ -90,4 +96,5 @@ export const OrderServices = {
   storeOrdersIntoDB,
   updateProductsOrders,
   getOrdersFromDB,
+  getAllOrdersFromDB,
 };

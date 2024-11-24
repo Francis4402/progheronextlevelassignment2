@@ -26,6 +26,24 @@ const storeOrders = async (req: Request, res: Response) => {
 
 const getAllOrders = async (req: Request, res: Response) => {
   try {
+    const result = await OrderServices.getAllOrdersFromDB();
+
+    res.status(200).json({
+      message: 'Orders retrieved successfully',
+      status: true,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: (error as Error).message || 'something went wrong',
+      status: false,
+      error,
+    });
+  }
+}
+
+const calculatedOrders = async (req: Request, res: Response) => {
+  try {
     const { totalRevenue } = await OrderServices.getOrdersFromDB();
 
     res.status(200).json({
@@ -65,4 +83,4 @@ const updateBooksById = async (req: Request, res: Response) => {
   }
 };
 
-export const OrderController = { storeOrders, updateBooksById, getAllOrders };
+export const OrderController = { storeOrders, updateBooksById, calculatedOrders, getAllOrders };
