@@ -13,5 +13,4 @@ router.put('/:productId', BookShopController.updateBooksById);
 
 router.delete('/:productId', BookShopController.deleteBooksById);
 
-
 export const BookShopRoutes = router;

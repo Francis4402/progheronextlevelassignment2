@@ -1,6 +1,5 @@
 import { Model } from 'mongoose';
 
-
 export type Book = {
   title: string;
   author: string;
@@ -13,10 +12,8 @@ export type Book = {
   updatedAt?: Date;
 };
 
-
 export type BookShopMethods = {
   isUserExists(id: string): Promise<Book | null>;
 };
-
 
 export type BookShopModel = Model<Book, unknown, BookShopMethods>;
