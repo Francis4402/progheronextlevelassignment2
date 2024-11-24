@@ -14,7 +14,7 @@ app.use('/api/products', bookShop_routes_1.BookShopRoutes);
 app.use('/api/orders', bookShopOrder_routes_1.OrderRoutes);
 app.get('/', (req, res) => {
     res.send({
-        Title: 'Programming Hero Next Level Assignment 2 (Book-Shop)',
+        Title: 'Programming Hero Next Level Assignment 2 (Book-Shop) SET-1',
         Name: 'Prithvy Francis Manda',
         Batch: '4',
         StudentID: 'WEB8-1601',
