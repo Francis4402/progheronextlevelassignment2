@@ -4,9 +4,8 @@ import { bookValidationSchema } from '../zodValidations/zodValidation';
 
 const storeBooks = async (req: Request, res: Response) => {
   try {
-    const { books: bookData } = req.body;
 
-    const zodparseData = bookValidationSchema.parse(bookData);
+    const zodparseData = bookValidationSchema.parse(req.body);
 
     const result = await BookShopServices.storeBooksIntoDB(zodparseData);
 
