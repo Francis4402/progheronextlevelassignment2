@@ -3,6 +3,10 @@ import { Book, BookShopModel } from '../bookShop_interfaces';
 
 const bookSchema = new Schema<Book, BookShopModel>(
   {
+    product_id: {
+      type: String,
+      required: [true, 'Product_id is required'],
+    },
     title: {
       type: String,
       required: [true, 'Title is required'],
@@ -18,6 +22,7 @@ const bookSchema = new Schema<Book, BookShopModel>(
     description: { type: String, required: [true, 'Description is required'] },
     quantity: { type: Number, required: [true, 'Quantity is required'] },
     inStock: { type: Boolean, required: [true, 'InStock is required'] },
+    image: { type: String, required: [true, 'Image is required'] },
   },
   { timestamps: true },
 );

@@ -1,6 +1,7 @@
 import { Model } from 'mongoose';
 
 export type Book = {
+  product_id: string;
   title: string;
   author: string;
   price: number;
@@ -8,6 +9,7 @@ export type Book = {
   description: string;
   quantity: number;
   inStock: boolean;
+  image: string;
   createdAt?: Date;
   updatedAt?: Date;
 };

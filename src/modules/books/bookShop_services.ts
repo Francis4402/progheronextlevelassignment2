@@ -55,6 +55,7 @@ const getBooksByIdFromDB = async (id: string) => {
 const updateBooksByIdFromDB = async (
   id: string,
   updates: Partial<{
+    product_id: string;
     title: string;
     author: string;
     price: number;
@@ -62,6 +63,7 @@ const updateBooksByIdFromDB = async (
     description: string;
     quantity: number;
     inStock: boolean;
+    image: string;
   }>,
 ) => {
   try {

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const bookValidationSchema = z
   .object({
+    product_id: z.string(),
     title: z
       .string()
       .max(50, { message: 'Title must be less than 50 characters' }),
@@ -21,6 +22,7 @@ const bookValidationSchema = z
       .max(225, { message: 'Description must be less than 225 characters' }),
     quantity: z.number(),
     inStock: z.boolean().default(true),
+    image: z.string(),
   })
   .extend({
     createdAt: z.date().optional(),
