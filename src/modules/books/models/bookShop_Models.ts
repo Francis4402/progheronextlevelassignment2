@@ -3,10 +3,7 @@ import { Book, BookShopModel } from '../bookShop_interfaces';
 
 const bookSchema = new Schema<Book, BookShopModel>(
   {
-    product_id: {
-      type: String,
-      required: [true, 'Product_id is required'],
-    },
+    product_id: { type: Number, required: [true, 'Product_id is required'] },
     title: {
       type: String,
       required: [true, 'Title is required'],

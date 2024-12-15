@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const bookValidationSchema = z
   .object({
-    product_id: z.string(),
+    product_id: z.number(),
     title: z
       .string()
       .max(50, { message: 'Title must be less than 50 characters' }),
