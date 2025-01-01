@@ -63,7 +63,6 @@ const updateBooksByIdFromDB = async (
     description: string;
     quantity: number;
     inStock: boolean;
-    image: string;
   }>,
 ) => {
   try {

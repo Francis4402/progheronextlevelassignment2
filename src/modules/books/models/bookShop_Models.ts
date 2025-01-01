@@ -19,7 +19,6 @@ const bookSchema = new Schema<Book, BookShopModel>(
     description: { type: String, required: [true, 'Description is required'] },
     quantity: { type: Number, required: [true, 'Quantity is required'] },
     inStock: { type: Boolean, required: [true, 'InStock is required'] },
-    image: { type: String, required: [true, 'Image is required'] },
   },
   { timestamps: true },
 );

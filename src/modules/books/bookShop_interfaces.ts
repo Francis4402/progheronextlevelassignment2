@@ -9,7 +9,6 @@ export type Book = {
   description: string;
   quantity: number;
   inStock: boolean;
-  image: string;
   createdAt?: Date;
   updatedAt?: Date;
 };

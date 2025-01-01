@@ -22,7 +22,6 @@ const bookValidationSchema = z
       .max(225, { message: 'Description must be less than 225 characters' }),
     quantity: z.number(),
     inStock: z.boolean().default(true),
-    image: z.string(),
   })
   .extend({
     createdAt: z.date().optional(),
