@@ -1,13 +1,17 @@
 import { model, Schema } from 'mongoose';
-import { Book, BookShopModel } from '../bookShop_interfaces';
+import { BookShopModel, TBook } from '../bookShop_interfaces';
 
-const bookSchema = new Schema<Book, BookShopModel>(
+const bookSchema = new Schema<TBook, BookShopModel>(
   {
     product_id: { type: Number, required: [true, 'Product_id is required'] },
     title: {
       type: String,
       required: [true, 'Title is required'],
       unique: true,
+    },
+    bookImage: {
+      type: String,
+      required: false,
     },
     author: {
       type: String,
@@ -28,13 +32,5 @@ bookSchema.methods.isUserExists = async function (id: string) {
   return existingUser;
 };
 
-bookSchema.pre('save', async function (next) {
-  const now = new Date();
-  this.updatedAt = now;
-  if (!this.createdAt) {
-    this.createdAt = now;
-  }
-  next();
-});
 
-export const BooksModel = model<Book, BookShopModel>('Book', bookSchema);
+export const BooksModel = model<TBook, BookShopModel>('Book', bookSchema);

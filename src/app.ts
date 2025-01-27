@@ -1,21 +1,29 @@
-import express, { Application } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 
 const app: Application = express();
 import cors from 'cors';
-import { BookShopRoutes } from './modules/bookShop_routes';
-import { OrderRoutes } from './modules/bookShopOrder_routes';
+import router from './app/modules/routes';
+import globalErrorHandler from './app/middlewares/globalErrorhandler';
+import notFound from './app/middlewares/notFound';
 
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/products', BookShopRoutes);
-
-app.use('/api/orders', OrderRoutes);
+app.use(cors({ origin: 'http://localhost:5173', credentials: true}));
 
 app.get('/', (req, res) => {
-  res.send({
-    message: 'Hello World   Phhero3214',
-  });
+  res.send('Hello PH Team');
+})
+
+app.use('/api', router);
+
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  globalErrorHandler(error, req, res, next);
+});
+
+//Not Found
+app.use((req: Request, res: Response, next: NextFunction) => {
+  notFound(req, res, next);
 });
 
 export default app;

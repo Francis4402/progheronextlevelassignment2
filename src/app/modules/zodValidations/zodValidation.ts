@@ -23,10 +23,6 @@ const bookValidationSchema = z
     quantity: z.number(),
     inStock: z.boolean().default(true),
   })
-  .extend({
-    createdAt: z.date().optional(),
-    updatedAt: z.date().optional(),
-  });
 
 const orderValidationSchema = z
   .object({
@@ -35,9 +31,5 @@ const orderValidationSchema = z
     quantity: z.number().min(1),
     totalPrice: z.number().min(1),
   })
-  .extend({
-    createdAt: z.date().optional(),
-    updatedAt: z.date().optional(),
-  });
 
 export { bookValidationSchema, orderValidationSchema };

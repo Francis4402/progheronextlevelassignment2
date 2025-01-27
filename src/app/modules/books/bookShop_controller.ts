@@ -1,27 +1,45 @@
 import { Request, Response } from 'express';
 import { BookShopServices } from './bookShop_services';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { httpStatus } from '../../config/status';
 import { bookValidationSchema } from '../zodValidations/zodValidation';
 
-const storeBooks = async (req: Request, res: Response) => {
-  try {
 
-    const zodparseData = bookValidationSchema.parse(req.body);
+const storeBooks = catchAsync(async (req, res) => {
 
-    const result = await BookShopServices.storeBooksIntoDB(zodparseData);
+  console.log(req.file);
+  console.log(req.body);
 
-    res.status(200).json({
-      message: 'Book created successfully',
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: (error as Error).message || 'something went wrong',
-      success: false,
-      error,
-    });
-  }
-};
+  const { product_id, title, author, price, category, description, quantity, inStock } = req.body;
+
+  const payload = {
+    product_id,
+    title,
+    author,
+    price,
+    category,
+    description,
+    quantity,
+    inStock,
+  };
+
+  const validpayload = bookValidationSchema.parse(payload);
+
+  const result = await BookShopServices.storeBooksIntoDB(req.file, validpayload);
+
+  sendResponse(res, {
+    statusCode: httpStatus.SUCCESS,
+    success: true,
+    message: 'Book data Stored successfully',
+    data: {
+      book: result,
+      file: req.file,
+    },
+  });
+});
+
+
 
 const getAllBooks = async (req: Request, res: Response) => {
   try {

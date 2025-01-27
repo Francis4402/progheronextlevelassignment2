@@ -1,20 +1,19 @@
 import { Model } from 'mongoose';
 
-export type Book = {
+export type TBook = {
   product_id: number;
   title: string;
+  bookImage?: string;
   author: string;
   price: number;
   category: 'Fiction' | 'Science' | 'SelfDevelopment' | 'Poetry' | 'Religious';
   description: string;
   quantity: number;
   inStock: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
 };
 
 export type BookShopMethods = {
-  isUserExists(id: string): Promise<Book | null>;
+  isUserExists(id: string): Promise<TBook | null>;
 };
 
-export type BookShopModel = Model<Book, unknown, BookShopMethods>;
+export type BookShopModel = Model<TBook, unknown, BookShopMethods>;

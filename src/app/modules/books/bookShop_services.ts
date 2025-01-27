@@ -1,22 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Types } from 'mongoose';
-
-import { Book } from './bookShop_interfaces';
+import { TBook } from './bookShop_interfaces';
 import { BooksModel } from './models/bookShop_Models';
+import { sendImageToCloudinary } from '../../utils/sendImagetocloud';
 
-const storeBooksIntoDB = async (book: Book) => {
-  const bookWithTimeStamps = {
-    ...book,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+const storeBooksIntoDB = async (file:any, payload: Partial<TBook>): Promise<TBook> => {
+  
+  const imageName = `${payload?.title}`;
 
-  const bookData = new BooksModel(bookWithTimeStamps);
+  const path = file?.path;
 
-  if (await bookData.isUserExists(book.title)) {
-    throw new Error('Book already exists');
+  const ImageUrl = await sendImageToCloudinary(imageName, path);
+
+  if (ImageUrl) {
+    payload.bookImage = ImageUrl;
+  } else {
+    console.log('Image upload failed, profileImage will not be set.');
   }
 
-  const result = await bookData.save();
+  // Save to the database
+  const result = await BooksModel.create(payload);
 
   return result;
 };
