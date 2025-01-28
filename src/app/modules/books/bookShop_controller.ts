@@ -41,25 +41,28 @@ const storeBooks = catchAsync(async (req, res) => {
 
 
 
-const getAllBooks = async (req: Request, res: Response) => {
-  try {
-    const searchTerm = req.query.searchTerm as string;
+const getAllBooks = catchAsync(async (req, res) => {
+
+  const searchTerm = req.query.searchTerm as string;
 
     const result = await BookShopServices.getBooksFromDB(searchTerm);
 
     res.status(200).json({
-      message: 'Books retrieved successfully',
+      message: 'Books Fetched successfully',
       status: true,
       data: result,
     });
-  } catch (error) {
-    res.status(500).json({
-      message: (error as Error).message || 'something went wrong',
-      status: false,
-      error,
+
+    sendResponse(res, {
+      statusCode: httpStatus.SUCCESS,
+      success: true,
+      message: 'Book data fetched successfully',
+      data: {
+        book: result,
+        file: req.file,
+      },
     });
-  }
-};
+})
 
 const getBooksById = async (req: Request, res: Response) => {
   try {
