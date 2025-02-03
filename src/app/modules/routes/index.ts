@@ -2,6 +2,7 @@ import { Router } from "express";
 import { BookShopRoutes } from "../books/bookShop_routes";
 import { OrderRoutes } from "../orders/bookShopOrder_routes";
 import { AuthRoutes } from "../Authentications/Auth/auth_route";
+import { UserRoutes } from "../Authentications/User/user_routes";
 
 
 const router = Router();
@@ -10,6 +11,10 @@ const moduleRoutes = [
     {
         path: '/auth',
         route: AuthRoutes,
+    },
+    {
+        path: '/auth/users',
+        route: UserRoutes,
     },
     {
         path: '/products',

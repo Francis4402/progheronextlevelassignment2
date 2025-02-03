@@ -1,12 +1,12 @@
 import { Model } from 'mongoose';
 
 export type TBook = {
-  product_id: number;
+  product_id: string;
   title: string;
   bookImage?: string;
   author: string;
   price: number;
-  category: 'Fiction' | 'Science' | 'SelfDevelopment' | 'Poetry' | 'Religious';
+  category: 'Fiction' | 'Science' | 'SoftwareDevelopment' | 'Poetry' | 'Story';
   description: string;
   quantity: number;
   inStock: boolean;

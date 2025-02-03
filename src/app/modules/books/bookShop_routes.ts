@@ -8,16 +8,19 @@ import { upload } from '../../utils/sendImagetocloud';
 
 const router = express.Router();
 
-router.post('/', upload.single('file'), (req: Request, res: Response, next: NextFunction) => {
+router.post('/', upload.single('booksImage'), (req: Request, res: Response, next: NextFunction) => {
     req.body = JSON.parse(req.body.data);
     next();
-}, auth([USER_ROLE.admin, USER_ROLE.user]), BookShopController.storeBooks);
+}, auth([USER_ROLE.admin]), BookShopController.storeBooks);
 
-router.get('/', auth([USER_ROLE.admin, USER_ROLE.user]), BookShopController.getAllBooks);
+router.get('/', auth([USER_ROLE.admin]), BookShopController.getAllBooks);
 
 router.get('/:productId', auth([USER_ROLE.admin, USER_ROLE.user]), BookShopController.getBooksById);
 
-router.put('/:productId', auth([USER_ROLE.admin]), BookShopController.updateBooksById);
+router.put('/:productId', upload.single('booksImage'), (req: Request, res: Response, next: NextFunction) => {
+    req.body = JSON.parse(req.body.data);
+    next();
+}, auth([USER_ROLE.admin]), BookShopController.updateBooksById);
 
 router.delete('/:productId', auth([USER_ROLE.admin]), BookShopController.deleteBooksById);
 

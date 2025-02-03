@@ -2,6 +2,7 @@ import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import config from '../config';
 import multer from 'multer';
 
+
 export const sendImageToCloudinary = async (imageName: string, path: string): Promise<string | null> => {
 
     cloudinary.config({ 
@@ -16,24 +17,6 @@ export const sendImageToCloudinary = async (imageName: string, path: string): Pr
             overwrite: true,
         });
 
-        console.log(uploadResult);
-
-        const optimizeUrl = cloudinary.url(imageName, {
-            fetch_format: 'auto',
-            quality: 'auto'
-        });
-        
-        console.log(optimizeUrl);
-        
-        // Transform the image: auto-crop to square aspect_ratio
-        const autoCropUrl = cloudinary.url(imageName, {
-            crop: 'auto',
-            gravity: 'auto',
-            width: 500,
-            height: 500,
-        });
-        
-        console.log(autoCropUrl);
             
         return uploadResult.secure_url;
     } catch (error) {
@@ -67,5 +50,3 @@ const storage = multer.diskStorage({
 });
   
 export const upload = multer({ storage: storage });
-
-

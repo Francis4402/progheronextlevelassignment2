@@ -1,9 +1,10 @@
 import { model, Schema } from 'mongoose';
 import { BookShopModel, TBook } from '../bookShop_interfaces';
 
+
 const bookSchema = new Schema<TBook, BookShopModel>(
   {
-    product_id: { type: Number, required: [true, 'Product_id is required'] },
+    product_id: { type: String, required: [true, 'Product_id is required'] },
     title: {
       type: String,
       required: [true, 'Title is required'],
@@ -16,7 +17,6 @@ const bookSchema = new Schema<TBook, BookShopModel>(
     author: {
       type: String,
       required: [true, 'Author is required'],
-      unique: true,
     },
     price: { type: Number, required: [true, 'Price is required'] },
     category: { type: String, required: [true, 'Category is required'] },

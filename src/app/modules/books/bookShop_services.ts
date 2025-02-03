@@ -58,24 +58,32 @@ const getBooksByIdFromDB = async (id: string) => {
 
 const updateBooksByIdFromDB = async (
   id: string,
-  updates: Partial<{
-    product_id: string;
-    title: string;
-    author: string;
-    price: number;
-    category: string;
-    description: string;
-    quantity: number;
-    inStock: boolean;
-  }>,
-) => {
+  payload: Partial<TBook>, file: any
+): Promise<TBook | null> => {
   try {
     const objectId = new Types.ObjectId(id);
 
-    const result = await BooksModel.updateOne(
-      { _id: objectId },
-      { $set: updates },
+    const imageName = `${payload?.title}`;
+
+    const path = file?.path;
+
+    const ImageUrl = await sendImageToCloudinary(imageName, path);
+
+    if (ImageUrl) {
+      payload.bookImage = ImageUrl;
+    } else {
+      console.log('Image upload failed, profileImage will not be set.');
+    }
+
+    const result = await BooksModel.findByIdAndUpdate(
+      objectId,
+      { $set: payload },
+      { new: true } 
     );
+
+    if (!result) {
+      throw new Error('Book not found');
+    }
 
     return result;
   } catch (error) {

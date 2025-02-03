@@ -1,4 +1,3 @@
-import { Request, Response } from 'express';
 import { BookShopServices } from './bookShop_services';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
@@ -32,10 +31,7 @@ const storeBooks = catchAsync(async (req, res) => {
     statusCode: httpStatus.SUCCESS,
     success: true,
     message: 'Book data Stored successfully',
-    data: {
-      book: result,
-      file: req.file,
-    },
+    data: result
   });
 });
 
@@ -47,81 +43,56 @@ const getAllBooks = catchAsync(async (req, res) => {
 
     const result = await BookShopServices.getBooksFromDB(searchTerm);
 
-    res.status(200).json({
-      message: 'Books Fetched successfully',
-      status: true,
-      data: result,
-    });
 
     sendResponse(res, {
       statusCode: httpStatus.SUCCESS,
       success: true,
       message: 'Book data fetched successfully',
-      data: {
-        book: result,
-        file: req.file,
-      },
+      data: result
     });
 })
 
-const getBooksById = async (req: Request, res: Response) => {
-  try {
-    const { productId: id } = req.params;
-    const result = await BookShopServices.getBooksByIdFromDB(id);
+const getBooksById = catchAsync(async (req, res) => {
+  const { productId: id } = req.params;
+  const result = await BookShopServices.getBooksByIdFromDB(id);
 
-    res.status(200).json({
-      message: 'Books retrieved successfully',
-      status: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: (error as Error).message || 'something went wrong',
-      status: false,
-      error,
-    });
-  }
-};
+  sendResponse(res, {
+    statusCode: httpStatus.SUCCESS,
+    success: true,
+    message: 'Book data fetched successfully',
+    data: result
+  });
+})
 
-const updateBooksById = async (req: Request, res: Response) => {
-  try {
-    const { productId: id } = req.params;
-    const { books } = req.body;
+const updateBooksById = catchAsync(async (req, res) => {
+  const { productId: id } = req.params;
+  
+  const { product_id, title, author, price, category, description, quantity, inStock } = req.body;
 
-    const result = await BookShopServices.updateBooksByIdFromDB(id, books);
+  const payload = {
+    product_id,title,author,price,category,description,quantity,inStock,
+  };
+  const result = await BookShopServices.updateBooksByIdFromDB(id, payload, req.file);
 
-    res.status(200).json({
-      message: 'Books updated successfully',
-      status: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: (error as Error).message || 'something went wrong',
-      status: false,
-      error,
-    });
-  }
-};
+  sendResponse(res, {
+    statusCode: httpStatus.SUCCESS,
+    success: true,
+    message: 'Book data updated successfully',
+    data: result,
+  });
+})
 
-const deleteBooksById = async (req: Request, res: Response) => {
-  try {
-    const { productId: id } = req.params;
-    const result = await BookShopServices.deleteBooksByIdFromDB(id);
+const deleteBooksById = catchAsync(async (req, res) => {
+  const { productId: id } = req.params;
+  const result = await BookShopServices.deleteBooksByIdFromDB(id);
 
-    res.status(200).json({
-      message: 'Book deleted successfully',
-      status: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: (error as Error).message || 'something went wrong',
-      status: false,
-      error,
-    });
-  }
-};
+  sendResponse(res, {
+    statusCode: httpStatus.SUCCESS,
+    success: true,
+    message: 'Book data deleted successfully',
+    data: result
+  });
+})
 
 export const BookShopController = {
   storeBooks,

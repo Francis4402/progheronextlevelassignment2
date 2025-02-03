@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const bookValidationSchema = z
   .object({
-    product_id: z.number(),
+    product_id: z.string(),
     title: z
       .string()
       .max(50, { message: 'Title must be less than 50 characters' }),
@@ -13,9 +13,9 @@ const bookValidationSchema = z
     category: z.enum([
       'Fiction',
       'Science',
-      'SelfDevelopment',
+      'SoftwareDevelopment',
       'Poetry',
-      'Religious',
+      'Story',
     ]),
     description: z
       .string()
