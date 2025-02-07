@@ -17,7 +17,7 @@ const updateBlogUnpublishDB = async (id: string) => {
         console.error("Error blog isPublished status:", error);
         throw new Error("Failed to toggle blog isPublished status");
     }
-}
+};
 
 const updateUserRolesDB = async (id: string) => {
     try {
@@ -34,7 +34,7 @@ const updateUserRolesDB = async (id: string) => {
         console.error("Error changing user role:", error);
         throw new Error("Failed to change user role");
     }
-}
+};
 
 const updateUserBlockedFromDB = async (id: string) => {
     try {
@@ -63,7 +63,7 @@ const deleteBlogIntoDB = async (id: string) => {
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 
 export const adminServices = {

@@ -1,29 +1,24 @@
 import { Request, Response } from 'express';
 import { OrderServices } from './orders_services';
-import { orderValidationSchema } from '../zodValidations/zodValidation';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { httpStatus } from '../../config/status';
 
 
 
-const storeOrders = async (req: Request, res: Response) => {
-  try {
+const storeOrders = catchAsync(async (req, res) => {
+  
 
-    const zodparseData = orderValidationSchema.parse(req.body);
+    const order = await OrderServices.storeOrdersIntoDB(req.body, res);
+    
 
-    const order = await OrderServices.storeOrdersIntoDB(zodparseData, res);
-
-    res.status(200).json({
-      message: 'Order created successfully',
-      status: true,
-      data: order,
+    sendResponse(res, {
+      statusCode: httpStatus.SUCCESS,
+      success: true,
+      message: 'Book data Stored successfully',
+      data: order
     });
-  } catch (error) {
-    res.status(500).json({
-      message: (error as Error).message || 'Failed to create order',
-      status: false,
-      error,
-    });
-  }
-};
+})
 
 const getAllOrders = async (req: Request, res: Response) => {
   try {

@@ -15,7 +15,7 @@ const updateUserRoles = catchAsync(async (req, res) => {
         message: 'User Role is updated successfully',
         data: result,
     })
-})
+});
 
 const updateUserBlocked = catchAsync(async (req, res) => {
     const {id} = req.params;

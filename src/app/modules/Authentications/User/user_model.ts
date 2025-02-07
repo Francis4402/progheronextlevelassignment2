@@ -18,6 +18,22 @@ const userSchema = new Schema<TUser, UserModel>({
         type: String,
         required: false,
     },
+    phone: {
+        type: String,
+        required: true,
+    },
+    address: {
+        type: String,
+        required: true,
+    },
+    gender: {
+        type: String,
+        required: true,
+    },
+    dateofbirth: {
+        type: String,
+        required: true,
+    },
     password: {
         type: String,
         required: true,

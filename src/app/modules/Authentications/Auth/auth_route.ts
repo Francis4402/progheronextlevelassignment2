@@ -4,6 +4,9 @@ import { UserValidation } from "../User/user_validation";
 import { AuthController } from "./auth_controller";
 import { UserController } from "../User/user_controller";
 import { upload } from "../../../utils/sendImagetocloud";
+import auth from "../../../middlewares/auth";
+import { USER_ROLE } from "../User/user_constant";
+import { AdminController } from "../Admin/admin_controller";
 
 
 const router = Router();
@@ -19,5 +22,10 @@ router.post('/register', upload.single('file'), (req: Request, res: Response, ne
 );
 
 router.post('/refresh-token', AuthController.refreshToken);
+
+router.patch('/users/:id/block', auth([USER_ROLE.admin]), AdminController.updateUserBlocked);
+
+router.patch('/users/:id/admin', auth([USER_ROLE.admin]), AdminController.updateUserRoles);
+
 
 export const AuthRoutes = router;

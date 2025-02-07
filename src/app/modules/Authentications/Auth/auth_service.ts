@@ -24,18 +24,43 @@ const loginUserFromDB = async (payload: TLoginUser) => {
         throw new AppError(httpStatus.UNAUTHORIZED, 'Password do not matched!');
 
     const jwtPayload = {
-        useremail: user.email,
+        _id: user._id,
+        email: user.email,
+        profileImage: user.profileImage,
         role: user.role,
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        gender: user.gender,
+        dateofbirth: user.dateofbirth
     };
-
     const accessToken = createToken(
-        jwtPayload,
+        {
+            _id: jwtPayload._id,
+            email: jwtPayload.email,
+            role: jwtPayload.role,
+            profileImage: jwtPayload.profileImage || '',
+            name: jwtPayload.name,
+            phone: jwtPayload.phone,
+            address: jwtPayload.address,
+            gender: jwtPayload.gender,
+            dateofbirth: jwtPayload.dateofbirth
+        },
         config.jwt_secret as string,
         config.jwt_access_expires_in as string,
-      );
-    
+    );
     const refreshToken = createToken(
-        jwtPayload,
+        {
+            _id: jwtPayload._id,
+            email: jwtPayload.email,
+            role: jwtPayload.role,
+            profileImage: jwtPayload.profileImage || '',
+            name: jwtPayload.name,
+            phone: jwtPayload.phone,
+            address: jwtPayload.address,
+            gender: jwtPayload.gender,
+            dateofbirth: jwtPayload.dateofbirth
+        },
         config.jwt_refresh_secret as string,
         config.jwt_refresh_expires_in as string,
     );
@@ -60,12 +85,28 @@ const refreshTokenFromDB = async (token: string) => {
     }
 
     const jwtPayload = {
-        useremail: user.email,
+        _id: user._id,
+        email: user.email,
+        profileImage: user.profileImage,
         role: user.role,
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        gender: user.gender,
+        dateofbirth: user.dateofbirth
     };
-
     const accessToken = createToken(
-        jwtPayload,
+        {
+            _id: jwtPayload._id,
+            email: jwtPayload.email,
+            role: jwtPayload.role,
+            profileImage: jwtPayload.profileImage || '',
+            name: jwtPayload.name,
+            phone: jwtPayload.phone,
+            address: jwtPayload.address,
+            gender: jwtPayload.gender,
+            dateofbirth: jwtPayload.dateofbirth
+        },
         config.jwt_secret as string,
         config.jwt_access_expires_in as string,
     );

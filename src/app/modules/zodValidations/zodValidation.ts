@@ -22,14 +22,15 @@ const bookValidationSchema = z
       .max(225, { message: 'Description must be less than 225 characters' }),
     quantity: z.number(),
     inStock: z.boolean().default(true),
-  })
+})
 
 const orderValidationSchema = z
   .object({
-    email: z.string().email(),
+    user: z.string(),
     product: z.string(),
-    quantity: z.number().min(1),
-    totalPrice: z.number().min(1),
-  })
+    quantity: z.number(),
+    totalPrice: z.number(),
+    status: z.enum(['Pending', 'Paid', 'Shipped']),
+})
 
 export { bookValidationSchema, orderValidationSchema };

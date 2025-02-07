@@ -13,7 +13,7 @@ router.post('/', upload.single('booksImage'), (req: Request, res: Response, next
     next();
 }, auth([USER_ROLE.admin]), BookShopController.storeBooks);
 
-router.get('/', auth([USER_ROLE.admin]), BookShopController.getAllBooks);
+router.get('/', auth([USER_ROLE.admin,  USER_ROLE.user]), BookShopController.getAllBooks);
 
 router.get('/:productId', auth([USER_ROLE.admin, USER_ROLE.user]), BookShopController.getBooksById);
 

@@ -3,9 +3,14 @@ import { USER_ROLE } from "./user_constant";
 
 
 export type TUser = {
+    _id: string;
     name: string;
     email: string;
     profileImage?: string;
+    phone: string;
+    address: string;
+    gender: string;
+    dateofbirth: string;
     password: string;
     role: 'admin' | 'user';
     isBlocked: boolean;

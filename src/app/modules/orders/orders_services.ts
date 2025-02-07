@@ -27,9 +27,6 @@ const storeOrdersIntoDB = async (order: Order, res: Response) => {
       .json({ message: 'Insufficient stock available', status: false });
   }
 
-  if (await orderData.isOrderExists(order.email)) {
-    throw new Error('Order already exists');
-  }
 
   const result = await orderData.save();
 
