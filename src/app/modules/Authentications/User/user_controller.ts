@@ -9,13 +9,14 @@ const createUser = catchAsync(async (req, res) => {
     console.log(req.file);
     console.log(req.body);
 
-    const { name, email, phone, address, gender, dateofbirth, password, role } = req.body;
+    const { name, email, phone, address, city, gender, dateofbirth, password, role } = req.body;
 
     const payload = {
         name,
         email,
         phone,
         address,
+        city,
         gender,
         dateofbirth,
         password,
@@ -59,7 +60,7 @@ const getUserById = catchAsync(async (req, res) => {
 const updateProfilebyId = catchAsync(async (req, res) => {
   const { id } = req.params;
 
-  const { name, email, phone, address, gender, dateofbirth, password, role } = req.body;
+  const { name, email, phone, address, gender, dateofbirth, role } = req.body;
 
   const payload = {
     name,
@@ -68,7 +69,6 @@ const updateProfilebyId = catchAsync(async (req, res) => {
     address,
     gender,
     dateofbirth,
-    password,
     role,
   };
 
@@ -81,7 +81,7 @@ const updateProfilebyId = catchAsync(async (req, res) => {
     success: true,
     message: 'User updated successfully',
     data: result,
-  })
+  });
 
 });
 

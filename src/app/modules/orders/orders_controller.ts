@@ -7,10 +7,10 @@ import { httpStatus } from '../../config/status';
 
 
 const storeOrders = catchAsync(async (req, res) => {
-  
 
-    const order = await OrderServices.storeOrdersIntoDB(req.body, res);
+    const user = req.user;
     
+    const order = await OrderServices.storeOrdersIntoDB(req.body, user, res, req.ip!);
 
     sendResponse(res, {
       statusCode: httpStatus.SUCCESS,

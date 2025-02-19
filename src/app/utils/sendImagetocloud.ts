@@ -3,50 +3,29 @@ import config from '../config';
 import multer from 'multer';
 
 
-export const sendImageToCloudinary = async (imageName: string, path: string): Promise<string | null> => {
+cloudinary.config({ 
+    cloud_name: config.cloudinary_cloud_name, 
+    api_key: config.cloudinary_api_key, 
+    api_secret: config.cloudinary_api_secret
+});
 
-    cloudinary.config({ 
-        cloud_name: config.cloudinary_cloud_name, 
-        api_key: config.cloudinary_api_key, 
-        api_secret: config.cloudinary_api_secret
-    });
-    
-    try {
-        const uploadResult: UploadApiResponse = await cloudinary.uploader.upload(path, {
-            public_id: imageName,
-            overwrite: true,
-        });
-
-            
-        return uploadResult.secure_url;
-    } catch (error) {
-        console.log(error);
-        return null;
-    }
-
-    // Upload an image
-    // const uploadResult: UploadApiResponse = await cloudinary.uploader
-    // .upload(
-    //     path, {
-    //         public_id: imageName,
-    //         overwrite: true,
-    //     }
-    // )
-    // .catch((error) => {
-    //     console.log(error);
-    // });
-    
+export const sendImageToCloudinary = (imageName: string, buffer: Buffer): Promise<UploadApiResponse> => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { public_id: imageName.trim() },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result as UploadApiResponse);
+        }
+      }
+    );
+    uploadStream.end(buffer);
+  });
 };
 
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, process.cwd() + '/uploads/')
-    },
-    filename: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-      cb(null, file.fieldname + '-' + uniqueSuffix)
-    }
-});
+const storage = multer.memoryStorage();
   
-export const upload = multer({ storage: storage });
+export const upload = multer({ storage: storage })

@@ -10,10 +10,9 @@ const storeBooks = catchAsync(async (req, res) => {
   console.log(req.file);
   console.log(req.body);
 
-  const { product_id, title, author, price, category, description, quantity, inStock } = req.body;
+  const { title, author, price, category, description, quantity, inStock } = req.body;
 
   const payload = {
-    product_id,
     title,
     author,
     price,
@@ -67,11 +66,12 @@ const getBooksById = catchAsync(async (req, res) => {
 const updateBooksById = catchAsync(async (req, res) => {
   const { productId: id } = req.params;
   
-  const { product_id, title, author, price, category, description, quantity, inStock } = req.body;
+  const { title, author, price, category, description, quantity, inStock } = req.body;
 
   const payload = {
-    product_id,title,author,price,category,description,quantity,inStock,
+    title,author,price,category,description,quantity,inStock,
   };
+
   const result = await BookShopServices.updateBooksByIdFromDB(id, payload, req.file);
 
   sendResponse(res, {

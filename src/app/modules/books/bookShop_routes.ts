@@ -13,9 +13,9 @@ router.post('/', upload.single('booksImage'), (req: Request, res: Response, next
     next();
 }, auth([USER_ROLE.admin]), BookShopController.storeBooks);
 
-router.get('/', auth([USER_ROLE.admin,  USER_ROLE.user]), BookShopController.getAllBooks);
+router.get('/', BookShopController.getAllBooks);
 
-router.get('/:productId', auth([USER_ROLE.admin, USER_ROLE.user]), BookShopController.getBooksById);
+router.get('/:productId', BookShopController.getBooksById);
 
 router.put('/:productId', upload.single('booksImage'), (req: Request, res: Response, next: NextFunction) => {
     req.body = JSON.parse(req.body.data);

@@ -1,7 +1,6 @@
 import { Model } from 'mongoose';
 
 export type TBook = {
-  product_id: string;
   title: string;
   bookImage?: string;
   author: string;

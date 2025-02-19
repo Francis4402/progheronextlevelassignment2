@@ -42,7 +42,7 @@ const refreshToken = catchAsync(async (req, res) => {
       message: 'Access token is retrieved succesfully!',
       data: result,
     });
-  });
+});
 
 
 export const AuthController = {

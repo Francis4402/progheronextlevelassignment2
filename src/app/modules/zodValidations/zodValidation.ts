@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 const bookValidationSchema = z
   .object({
-    product_id: z.string(),
     title: z
       .string()
       .max(50, { message: 'Title must be less than 50 characters' }),
@@ -26,11 +25,11 @@ const bookValidationSchema = z
 
 const orderValidationSchema = z
   .object({
-    user: z.string(),
-    product: z.string(),
+    user: z.any(),
+    product: z.any(),
     quantity: z.number(),
     totalPrice: z.number(),
-    status: z.enum(['Pending', 'Paid', 'Shipped']),
+    status: z.enum(['Pending', 'Paid', 'Shipped', 'Completed', 'Cancelled']),
 })
 
 export { bookValidationSchema, orderValidationSchema };

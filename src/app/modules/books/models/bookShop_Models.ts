@@ -4,7 +4,6 @@ import { BookShopModel, TBook } from '../bookShop_interfaces';
 
 const bookSchema = new Schema<TBook, BookShopModel>(
   {
-    product_id: { type: String, required: [true, 'Product_id is required'] },
     title: {
       type: String,
       required: [true, 'Title is required'],

@@ -3,42 +3,76 @@ import { OrdersModel } from './models/orders_models';
 import { Order } from './order_interface';
 import { BooksModel } from '../books/models/bookShop_Models';
 import { Response } from 'express';
+import { TUser } from '../Authentications/User/user_interface';
+import { orderUtils } from './order_utils';
 
 
 
-const storeOrdersIntoDB = async (order: Order, res: Response) => {
-  const orderWithTimeStamps = {
-    ...order,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
 
-  const orderData = new OrdersModel(orderWithTimeStamps);
+const storeOrdersIntoDB = async (order: Order, user: TUser, res: Response, client_ip: string) => {
+  try {
+    const book = await BooksModel.findById(order.product);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found", status: false });
+    }
 
-  const book = await BooksModel.findById(order.product);
+    // Check stock availability
+    if (book.quantity < order.quantity) {
+      return res.status(400).json({ message: "Insufficient stock available", status: false });
+    }
 
-  if (!book) {
-    return res.status(404).json({ message: 'Book not found', status: false });
+    const remainingQuantity = book.quantity - order.quantity;
+
+    await updateProductsOrders(order.product.toString(), {
+      quantity: remainingQuantity,
+      inStock: remainingQuantity > 0,
+    });
+
+    if (!order.totalPrice || order.totalPrice <= 0) {
+      return res.status(400).json({ message: "Invalid order total price", status: false });
+    }
+
+    const orderData = new OrdersModel({
+      ...order,
+      user: user._id,
+    });
+
+    const shurjopayPayload = {
+      amount: order.totalPrice.toString(),
+      order_id: orderData._id.toString(),
+      currency: "BDT",
+      customer_name: user.name,
+      customer_address: user.address,
+      customer_email: user.email,
+      customer_phone: user.phone,
+      customer_city: user.city,
+      client_ip,
+    };
+
+    console.log("Payload:", shurjopayPayload);
+
+    const payment = await orderUtils.makePaymentAsync(shurjopayPayload);
+
+    if (payment?.transactionStatus) {
+    order = await orderData.updateOne({
+      transaction: {
+        id: payment.sp_order_id,
+        transactionStatus: payment.transactionStatus,
+      },
+    });
   }
 
-  if (book.quantity < order.quantity) {
-    return res
-      .status(400)
-      .json({ message: 'Insufficient stock available', status: false });
+  return payment.checkout_url;
+
+  } catch (error) {
+    console.error("Error processing order:", error);
+    return res.status(500).json({ message: "Internal server error", status: false });
   }
-
-
-  const result = await orderData.save();
-
-  const remainingQuantity = book.quantity - order.quantity;
-
-  await updateProductsOrders(order.product, {
-    quantity: remainingQuantity,
-    inStock: remainingQuantity > 0,
-  });
-
-  return result;
 };
+
+
+
+
 
 const getAllOrdersFromDB = async () => {
   const orders = await OrdersModel.find();

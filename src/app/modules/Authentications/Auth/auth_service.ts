@@ -31,35 +31,22 @@ const loginUserFromDB = async (payload: TLoginUser) => {
         name: user.name,
         phone: user.phone,
         address: user.address,
+        city: user.city,
         gender: user.gender,
         dateofbirth: user.dateofbirth
     };
     const accessToken = createToken(
         {
-            _id: jwtPayload._id,
-            email: jwtPayload.email,
-            role: jwtPayload.role,
-            profileImage: jwtPayload.profileImage || '',
-            name: jwtPayload.name,
-            phone: jwtPayload.phone,
-            address: jwtPayload.address,
-            gender: jwtPayload.gender,
-            dateofbirth: jwtPayload.dateofbirth
+            ...jwtPayload,
+            profileImage: jwtPayload.profileImage || ''
         },
         config.jwt_secret as string,
         config.jwt_access_expires_in as string,
     );
     const refreshToken = createToken(
         {
-            _id: jwtPayload._id,
-            email: jwtPayload.email,
-            role: jwtPayload.role,
-            profileImage: jwtPayload.profileImage || '',
-            name: jwtPayload.name,
-            phone: jwtPayload.phone,
-            address: jwtPayload.address,
-            gender: jwtPayload.gender,
-            dateofbirth: jwtPayload.dateofbirth
+            ...jwtPayload,
+            profileImage: jwtPayload.profileImage || ''
         },
         config.jwt_refresh_secret as string,
         config.jwt_refresh_expires_in as string,
@@ -69,12 +56,11 @@ const loginUserFromDB = async (payload: TLoginUser) => {
 }
 
 const refreshTokenFromDB = async (token: string) => {
-
+    // Verify the refresh token
     const decoded = verifyToken(token, config.jwt_refresh_secret as string);
+    const { email } = decoded;  // Extract email or other necessary info from the decoded token
 
-    const { useremail } = decoded;
-
-    const user = await User.isUserExistsByCustomId(useremail);
+    const user = await User.isUserExistsByCustomId(email);  // Find user by email
 
     if (!user) {
         throw new AppError(httpStatus.UNAUTHORIZED, 'User not found');
@@ -84,6 +70,7 @@ const refreshTokenFromDB = async (token: string) => {
         throw new AppError(httpStatus.FORBIDDEN, 'Your account is blocked!');
     }
 
+    // Generate new access token and refresh token
     const jwtPayload = {
         _id: user._id,
         email: user.email,
@@ -92,27 +79,30 @@ const refreshTokenFromDB = async (token: string) => {
         name: user.name,
         phone: user.phone,
         address: user.address,
+        city: user.city,
         gender: user.gender,
         dateofbirth: user.dateofbirth
     };
     const accessToken = createToken(
         {
-            _id: jwtPayload._id,
-            email: jwtPayload.email,
-            role: jwtPayload.role,
-            profileImage: jwtPayload.profileImage || '',
-            name: jwtPayload.name,
-            phone: jwtPayload.phone,
-            address: jwtPayload.address,
-            gender: jwtPayload.gender,
-            dateofbirth: jwtPayload.dateofbirth
+            ...jwtPayload,
+            profileImage: jwtPayload.profileImage || ''
         },
         config.jwt_secret as string,
-        config.jwt_access_expires_in as string,
+        config.jwt_access_expires_in as string,  // Access token expiration
+    );
+    const refreshToken = createToken(
+        {
+            ...jwtPayload,
+            profileImage: jwtPayload.profileImage || ''
+        },
+        config.jwt_refresh_secret as string,
+        config.jwt_refresh_expires_in as string,  // Refresh token expiration
     );
 
-    return { accessToken };
+    return { accessToken, refreshToken };
 };
+
 
 
 export const AuthServices = {

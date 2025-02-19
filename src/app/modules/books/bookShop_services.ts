@@ -1,29 +1,36 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { Types } from 'mongoose';
 import { TBook } from './bookShop_interfaces';
 import { BooksModel } from './models/bookShop_Models';
 import { sendImageToCloudinary } from '../../utils/sendImagetocloud';
+import { v2 as cloudinary } from 'cloudinary';
 
-const storeBooksIntoDB = async (file:any, payload: Partial<TBook>): Promise<TBook> => {
-  
-  const imageName = `${payload?.title}`;
 
-  const path = file?.path;
+export const storeBooksIntoDB = async (file: Express.Multer.File | undefined, payload: Partial<TBook>): Promise<TBook> => {
+  try {
+      if (!file || !file.buffer) {
+          throw new Error('No file provided');
+      }
 
-  const ImageUrl = await sendImageToCloudinary(imageName, path);
+      const imageName = payload.title?.replace(/\s+/g, '_') || `book_${Date.now()}`;
+      const uploadResult = await sendImageToCloudinary(imageName, file.buffer);
 
-  if (ImageUrl) {
-    payload.bookImage = ImageUrl;
-  } else {
-    console.log('Image upload failed, profileImage will not be set.');
+      if (uploadResult && uploadResult.secure_url) {
+          payload.bookImage = uploadResult.secure_url;
+      } else {
+          console.warn('Image upload failed, bookImage will not be set.');
+      }
+
+      // Save to database
+      const result = await BooksModel.create(payload);
+      return result;
+  } catch (error) {
+      console.error('Error storing book into DB:', error);
+      throw error;
   }
-
-  // Save to the database
-  const result = await BooksModel.create(payload);
-
-  return result;
 };
+
 
 const getBooksFromDB = async (searchTerm: string) => {
   try {
@@ -56,29 +63,27 @@ const getBooksByIdFromDB = async (id: string) => {
   }
 };
 
-const updateBooksByIdFromDB = async (
-  id: string,
-  payload: Partial<TBook>, file: any
-): Promise<TBook | null> => {
+export const updateBooksByIdFromDB = async (id: string, payload: Partial<TBook>, file: Express.Multer.File | undefined): Promise<TBook | null> => {
   try {
     const objectId = new Types.ObjectId(id);
 
-    const imageName = `${payload?.title}`;
+    // If a file is provided, upload to Cloudinary
+    if (file && file.buffer) {
+      const imageName = payload.title?.replace(/\s+/g, '_') || `book_${Date.now()}`;
+      const imageUrl = await sendImageToCloudinary(imageName, file.buffer);
 
-    const path = file?.path;
-
-    const ImageUrl = await sendImageToCloudinary(imageName, path);
-
-    if (ImageUrl) {
-      payload.bookImage = ImageUrl;
-    } else {
-      console.log('Image upload failed, profileImage will not be set.');
+      if (imageUrl && imageUrl.secure_url) {
+        payload.bookImage = imageUrl.secure_url;
+      } else {
+        console.warn('Image upload failed, bookImage will not be updated.');
+      }
     }
 
+    // Update book in the database
     const result = await BooksModel.findByIdAndUpdate(
       objectId,
       { $set: payload },
-      { new: true } 
+      { new: true }
     );
 
     if (!result) {
@@ -92,15 +97,43 @@ const updateBooksByIdFromDB = async (
   }
 };
 
-const deleteBooksByIdFromDB = async (id: string) => {
+const deleteBooksByIdFromDB = async (id: string): Promise<TBook> => {
   try {
     const objectId = new Types.ObjectId(id);
 
+    // First, find the book and get the public_id for the image
+    const book = await BooksModel.findById(objectId);
+    
+    if (!book) {
+      throw new Error('Book not found');
+    }
+
+    // If the book has an image, delete it from Cloudinary
+    if (book.bookImage) {
+      const imageName = book.bookImage.split('/').pop()?.split('.')[0]; // Get the public_id from the URL (filename part before the extension)
+      
+      if (imageName) {
+        await cloudinary.uploader.destroy(imageName, (error, result) => {
+          if (error) {
+            console.error('Error deleting image from Cloudinary:', error);
+          } else {
+            console.log('Image deleted from Cloudinary:', result);
+          }
+        });
+      }
+    }
+
+    // Delete the book from the database
     const result = await BooksModel.deleteOne({ _id: objectId });
 
-    return result;
+    if (result.deletedCount === 0) {
+      throw new Error('Failed to delete book');
+    }
+
+    return book; // Return the book object instead of the DeleteResult
   } catch (error) {
-    console.log(error);
+    console.error('Error deleting book:', error);
+    throw new Error('Failed to delete book');
   }
 };
 
