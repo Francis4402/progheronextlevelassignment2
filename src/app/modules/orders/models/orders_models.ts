@@ -5,14 +5,21 @@ import { Order, OrderModel } from '../order_interface';
 const orderSchema = new Schema<Order, OrderModel>(
   {
     user: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+      type: String,
+      ref: "Product",
       required: true,
     },
-    product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+    product: { type: String, ref: "Product", required: true },
     quantity: { type: Number, required: [true, 'Quantity is required'] },
-    totalPrice: { type: Number, required: [true, 'TotalPrice is required'] },
-    status: { type: String, enum: ["Pending" , "Paid" , "Shipped" , "Completed" , "Cancelled"]},
+    totalPrice: {
+      type: Number,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Paid", "Shipped", "Completed", "Cancelled"],
+      default: "Pending",
+    },
     transaction: {
       id: String,
       transactionStatus: String,

@@ -10,13 +10,13 @@ import { orderUtils } from './order_utils';
 
 
 const storeOrdersIntoDB = async (order: Order, user: TUser, res: Response, client_ip: string) => {
-  try {
-    const book = await BooksModel.findById(order.product);
+    
+  const book = await BooksModel.findById(order.product);
+    
     if (!book) {
       return res.status(404).json({ message: "Book not found", status: false });
     }
 
-    // Check stock availability
     if (book.quantity < order.quantity) {
       return res.status(400).json({ message: "Insufficient stock available", status: false });
     }
@@ -32,14 +32,19 @@ const storeOrdersIntoDB = async (order: Order, user: TUser, res: Response, clien
       return res.status(400).json({ message: "Invalid order total price", status: false });
     }
 
-    const orderData = new OrdersModel({
-      ...order,
-      user: user._id,
+    
+    const orderData = await OrdersModel.create({
+      user,
+      product: order.product,
+      quantity: order.quantity,
+      totalPrice: order.totalPrice,
     });
 
+    console.log('orderData', orderData);
+
     const shurjopayPayload = {
-      amount: order.totalPrice.toString(),
-      order_id: orderData._id.toString(),
+      amount: orderData.totalPrice.toString(),
+      order_id: orderData._id,
       currency: "BDT",
       customer_name: user.name,
       customer_address: user.address,
@@ -53,6 +58,7 @@ const storeOrdersIntoDB = async (order: Order, user: TUser, res: Response, clien
 
     const payment = await orderUtils.makePaymentAsync(shurjopayPayload);
 
+
     if (payment?.transactionStatus) {
     order = await orderData.updateOne({
       transaction: {
@@ -63,15 +69,40 @@ const storeOrdersIntoDB = async (order: Order, user: TUser, res: Response, clien
   }
 
   return payment.checkout_url;
-
-  } catch (error) {
-    console.error("Error processing order:", error);
-    return res.status(500).json({ message: "Internal server error", status: false });
-  }
 };
 
 
 
+
+const verifyPayment = async (order_id: string) => {
+  const verifiedPayment = await orderUtils.verifyPaymentAsync(order_id);
+
+  if (verifiedPayment.length) {
+    await OrdersModel.findOneAndUpdate(
+      {
+        "transaction.id": order_id,
+      },
+      {
+        "transaction.bank_status": verifiedPayment[0].bank_status,
+        "transaction.sp_code": verifiedPayment[0].sp_code,
+        "transaction.sp_message": verifiedPayment[0].sp_message,
+        "transaction.transactionStatus": verifiedPayment[0].transaction_status,
+        "transaction.method": verifiedPayment[0].method,
+        "transaction.date_time": verifiedPayment[0].date_time,
+        status:
+          verifiedPayment[0].bank_status == "Success"
+            ? "Paid"
+            : verifiedPayment[0].bank_status == "Failed"
+            ? "Pending"
+            : verifiedPayment[0].bank_status == "Cancel"
+            ? "Cancelled"
+            : "",
+      }
+    );
+  }
+
+  return verifiedPayment;
+};
 
 
 const getAllOrdersFromDB = async () => {
@@ -130,4 +161,5 @@ export const OrderServices = {
   updateProductsOrders,
   getOrdersFromDB,
   getAllOrdersFromDB,
+  verifyPayment
 };

@@ -15,7 +15,7 @@ const storeOrders = catchAsync(async (req, res) => {
     sendResponse(res, {
       statusCode: httpStatus.SUCCESS,
       success: true,
-      message: 'Book data Stored successfully',
+      message: 'Order Created successfully',
       data: order
     });
 })
@@ -79,4 +79,17 @@ const updateBooksById = async (req: Request, res: Response) => {
   }
 };
 
-export const OrderController = { storeOrders, updateBooksById, calculatedOrders, getAllOrders };
+
+const verifyPayment = catchAsync(async (req, res) => {
+  const order = await OrderServices.verifyPayment(req.query.order_id as string);
+
+  sendResponse(res, {
+    statusCode: httpStatus.SUCCESS,
+    success: true,
+    message: 'verified successfully',
+    data: order
+  });
+});
+
+
+export const OrderController = { storeOrders, updateBooksById, calculatedOrders, getAllOrders, verifyPayment };

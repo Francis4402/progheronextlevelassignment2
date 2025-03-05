@@ -56,11 +56,11 @@ const loginUserFromDB = async (payload: TLoginUser) => {
 }
 
 const refreshTokenFromDB = async (token: string) => {
-    // Verify the refresh token
+    
     const decoded = verifyToken(token, config.jwt_refresh_secret as string);
-    const { email } = decoded;  // Extract email or other necessary info from the decoded token
+    const { email } = decoded;
 
-    const user = await User.isUserExistsByCustomId(email);  // Find user by email
+    const user = await User.isUserExistsByCustomId(email);
 
     if (!user) {
         throw new AppError(httpStatus.UNAUTHORIZED, 'User not found');
@@ -89,7 +89,7 @@ const refreshTokenFromDB = async (token: string) => {
             profileImage: jwtPayload.profileImage || ''
         },
         config.jwt_secret as string,
-        config.jwt_access_expires_in as string,  // Access token expiration
+        config.jwt_access_expires_in as string,
     );
     const refreshToken = createToken(
         {
@@ -97,7 +97,7 @@ const refreshTokenFromDB = async (token: string) => {
             profileImage: jwtPayload.profileImage || ''
         },
         config.jwt_refresh_secret as string,
-        config.jwt_refresh_expires_in as string,  // Refresh token expiration
+        config.jwt_refresh_expires_in as string,
     );
 
     return { accessToken, refreshToken };

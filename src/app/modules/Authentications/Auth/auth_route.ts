@@ -17,15 +17,15 @@ router.post('/register', upload.single('file'), (req: Request, res: Response, ne
     req.body = JSON.parse(req.body.data);
     next();
 },
-    validateRequest(UserValidation.userValidationSchema), 
+    validateRequest(UserValidation.userValidationSchema),
     UserController.createUser
 );
 
 router.post('/refresh-token', AuthController.refreshToken);
 
-router.patch('/users/:id/block', auth([USER_ROLE.admin]), AdminController.updateUserBlocked);
+router.patch('/users/:id/block', auth(USER_ROLE.admin), AdminController.updateUserBlocked);
 
-router.patch('/users/:id/admin', auth([USER_ROLE.admin]), AdminController.updateUserRoles);
+router.patch('/users/:id/admin', auth(USER_ROLE.admin), AdminController.updateUserRoles);
 
 
 export const AuthRoutes = router;

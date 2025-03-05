@@ -14,19 +14,15 @@ shurjopay.config(
 );
 
 
-
-
 const makePaymentAsync = async (
   paymentPayload: any
 ): Promise<PaymentResponse> => {
 
-  console.log('paymentpayload', paymentPayload);
-
   return new Promise((resolve, reject) => {
     shurjopay.makePayment(
       paymentPayload,
-      (response) => {resolve(response); console.log('utils', response);},
-      (error) => {reject(error); console.log('utils', error);}
+      (response) => resolve(response),
+      (error) => reject(error)
     );
   });
 };

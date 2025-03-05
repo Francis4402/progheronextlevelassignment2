@@ -1,8 +1,8 @@
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 
 export type Order = {
-  user: Types.ObjectId;
-  product: Types.ObjectId;
+  user: string;
+  product: string;
   quantity: number;
   totalPrice: number;
   transaction: {

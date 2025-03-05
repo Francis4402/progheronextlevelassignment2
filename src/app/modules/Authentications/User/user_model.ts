@@ -50,7 +50,7 @@ const userSchema = new Schema<TUser, UserModel>({
     isBlocked: {
       type: Boolean,
       default: false,
-    }
+    },
   }, {
     timestamps: true,
   });
