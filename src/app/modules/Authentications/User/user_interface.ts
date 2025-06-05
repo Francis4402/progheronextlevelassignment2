@@ -1,25 +1,39 @@
-import { Model } from "mongoose";
-import { USER_ROLE } from "./user_constant";
+import { Document, Model } from 'mongoose';
 
 
-export type TUser = {
-    _id: string;
-    name: string;
-    email: string;
-    profileImage?: string;
-    phone: string;
-    address: string;
-    city: string;
-    gender: string;
-    dateofbirth: string;
-    password: string;
-    role: 'admin' | 'user';
-    isBlocked: boolean;
+export enum UserRole {
+   ADMIN = 'admin',
+   USER = 'user'
 }
 
-export interface UserModel extends Model<TUser> {
-    isUserExistsByCustomId(email: string): Promise<TUser>;
-    isPasswordMatched(plainTextPassword: string, hashedPassword: string): Promise<boolean>;
+
+export interface IUser extends Document {
+   email: string;
+   password: string;
+   name: string;
+   role: UserRole;
+   hasShop: boolean;
+   clientInfo: {
+      device: 'pc' | 'mobile';
+      browser: string;
+      ipAddress: string;
+      pcName?: string;
+      os?: string;
+      userAgent?: string;
+   };
+   lastLogin: Date;
+   isActive: boolean;
+   otpToken?: string | null;
+   createdAt: Date;
+   updatedAt: Date;
 }
 
-export type TUserRole = keyof typeof USER_ROLE;
+export interface UserModel extends Model<IUser> {
+   
+   isPasswordMatched(
+      plainTextPassword: string,
+      hashedPassword: string
+   ): Promise<boolean>;
+   isUserExistsByEmail(id: string): Promise<IUser>;
+   checkUserExist(userId: string): Promise<IUser>;
+}

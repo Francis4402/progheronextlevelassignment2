@@ -1,111 +1,291 @@
+import { StatusCodes } from "http-status-codes";
 import config from "../../../config";
-import { httpStatus } from "../../../config/status";
+import mongoose, { ClientSession } from 'mongoose';
 import AppError from "../../../errors/AppError";
-import { User } from "../User/user_model";
-import { TLoginUser } from "./auth.interface";
+import User from "../User/user_model";
+
 import { createToken, verifyToken } from "./auth_utils";
+import { IAuth, IJwtPayload } from "./auth.interface";
 
 
-const loginUserFromDB = async (payload: TLoginUser) => {
-    
-    const user = await User.isUserExistsByCustomId(payload.email);
-
-    if(!user) {
-        throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid credentials');
+const loginUser = async (payload: IAuth) => {
+    const session = await mongoose.startSession();
+ 
+    try {
+       session.startTransaction();
+ 
+       const user = await User.findOne({ email: payload.email }).session(
+          session
+       );
+       if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
+       }
+ 
+       if (!user.isActive) {
+          throw new AppError(StatusCodes.FORBIDDEN, 'This user is not active!');
+       }
+ 
+       if (!(await User.isPasswordMatched(payload?.password, user?.password))) {
+          throw new AppError(StatusCodes.FORBIDDEN, 'Password does not match');
+       }
+ 
+       const jwtPayload: IJwtPayload = {
+          userId: user._id as string,
+          name: user.name as string,
+          email: user.email as string,
+          hasShop: user.hasShop,
+          isActive: user.isActive,
+          role: user.role,
+       };
+ 
+       const accessToken = createToken(
+          jwtPayload,
+          config.jwt_access_secret as string,
+          config.jwt_access_expires_in as string
+       );
+ 
+       const refreshToken = createToken(
+          jwtPayload,
+          config.jwt_refresh_secret as string,
+          config.jwt_refresh_expires_in as string
+       );
+ 
+       const updateUserInfo = await User.findByIdAndUpdate(
+          user._id,
+          { clientInfo: payload.clientInfo, lastLogin: Date.now() },
+          { new: true, session }
+       );
+ 
+       await session.commitTransaction();
+ 
+       return {
+          accessToken,
+          refreshToken,
+       };
+    } catch (error) {
+       await session.abortTransaction();
+       throw error;
+    } finally {
+       session.endSession();
     }
+ };
 
-    const isBlocked = user.isBlocked;
+ const refreshToken = async (token: string) => {
 
-    if(isBlocked === true) {
-        throw new AppError(httpStatus.FORBIDDEN, 'Your account is blocked !');
+    let verifiedToken = null;
+    try {
+       verifiedToken = verifyToken(
+          token,
+          config.jwt_refresh_secret as Secret
+       );
+    } catch (err) {
+       throw new AppError(StatusCodes.FORBIDDEN, 'Invalid Refresh Token');
     }
-
-    if(! await User.isPasswordMatched(payload?.password, user?.password))
-        throw new AppError(httpStatus.UNAUTHORIZED, 'Password do not matched!');
-
-    const jwtPayload = {
-        _id: user._id,
-        email: user.email,
-        profileImage: user.profileImage,
-        role: user.role,
-        name: user.name,
-        phone: user.phone,
-        address: user.address,
-        city: user.city,
-        gender: user.gender,
-        dateofbirth: user.dateofbirth
+ 
+    const { userId } = verifiedToken;
+ 
+    const isUserExist = await User.findById(userId);
+    if (!isUserExist) {
+       throw new AppError(StatusCodes.NOT_FOUND, 'User does not exist');
+    }
+ 
+    if (!isUserExist.isActive) {
+       throw new AppError(StatusCodes.BAD_REQUEST, 'User is not active');
+    }
+ 
+ 
+    const jwtPayload: IJwtPayload = {
+       userId: isUserExist._id as string,
+       name: isUserExist.name as string,
+       email: isUserExist.email as string,
+       hasShop: isUserExist.hasShop,
+       isActive: isUserExist.isActive,
+       role: isUserExist.role,
     };
-    const accessToken = createToken(
-        {
-            ...jwtPayload,
-            profileImage: jwtPayload.profileImage || ''
-        },
-        config.jwt_secret as string,
-        config.jwt_access_expires_in as string,
+ 
+    const newAccessToken = createToken(
+       jwtPayload,
+       config.jwt_access_secret as Secret,
+       config.jwt_access_expires_in as string
     );
-    const refreshToken = createToken(
-        {
-            ...jwtPayload,
-            profileImage: jwtPayload.profileImage || ''
-        },
-        config.jwt_refresh_secret as string,
-        config.jwt_refresh_expires_in as string,
-    );
-
-    return {accessToken, refreshToken};
-}
-
-const refreshTokenFromDB = async (token: string) => {
-    
-    const decoded = verifyToken(token, config.jwt_refresh_secret as string);
-    const { email } = decoded;
-
-    const user = await User.isUserExistsByCustomId(email);
-
-    if (!user) {
-        throw new AppError(httpStatus.UNAUTHORIZED, 'User not found');
-    }
-
-    if (user.isBlocked) {
-        throw new AppError(httpStatus.FORBIDDEN, 'Your account is blocked!');
-    }
-
-    // Generate new access token and refresh token
-    const jwtPayload = {
-        _id: user._id,
-        email: user.email,
-        profileImage: user.profileImage,
-        role: user.role,
-        name: user.name,
-        phone: user.phone,
-        address: user.address,
-        city: user.city,
-        gender: user.gender,
-        dateofbirth: user.dateofbirth
+ 
+    return {
+       accessToken: newAccessToken,
     };
-    const accessToken = createToken(
-        {
-            ...jwtPayload,
-            profileImage: jwtPayload.profileImage || ''
-        },
-        config.jwt_secret as string,
-        config.jwt_access_expires_in as string,
-    );
-    const refreshToken = createToken(
-        {
-            ...jwtPayload,
-            profileImage: jwtPayload.profileImage || ''
-        },
-        config.jwt_refresh_secret as string,
-        config.jwt_refresh_expires_in as string,
-    );
-
-    return { accessToken, refreshToken };
 };
 
 
+const changePassword = async (
+    userData: JwtPayload,
+    payload: { oldPassword: string; newPassword: string }
+ ) => {
+    const { userId } = userData;
+    const { oldPassword, newPassword } = payload;
+ 
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+    }
+    if (!user.isActive) {
+       throw new AppError(StatusCodes.FORBIDDEN, 'User account is inactive');
+    }
+ 
+    // Validate old password
+    const isOldPasswordCorrect = await User.isPasswordMatched(
+       oldPassword,
+       user.password
+    );
+    if (!isOldPasswordCorrect) {
+       throw new AppError(StatusCodes.FORBIDDEN, 'Incorrect old password');
+    }
+ 
+    // Hash and update the new password
+    const hashedPassword = await bcrypt.hash(
+       newPassword,
+       Number(config.bcrypt_salt_rounds)
+    );
+    await User.updateOne({ _id: userId }, { password: hashedPassword });
+ 
+    return { message: 'Password changed successfully' };
+};
+
+
+const forgotPassword = async ({ email }: { email: string }) => {
+    const user = await User.findOne({ email: email });
+ 
+    if (!user) {
+       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+    }
+ 
+    if (!user.isActive) {
+       throw new AppError(StatusCodes.BAD_REQUEST, 'User is not active!');
+    }
+ 
+    const otp = generateOtp();
+ 
+    const otpToken = jwt.sign({ otp, email }, config.jwt_otp_secret as string, {
+       expiresIn: '5m',
+    });
+ 
+    await User.updateOne({ email }, { otpToken });
+ 
+    try {
+       const emailContent = await EmailHelper.createEmailContent(
+          { otpCode: otp, userName: user.name },
+          'forgotPassword'
+       );
+ 
+       await EmailHelper.sendEmail(email, emailContent, "Reset Password OTP");
+    } catch (error) {
+       await User.updateOne({ email }, { $unset: { otpToken: 1 } });
+ 
+       throw new AppError(
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          'Failed to send OTP email. Please try again later.'
+       );
+    }
+};
+
+
+const verifyOTP = async (
+    { email, otp }: { email: string, otp: string }
+ ) => {
+    const user = await User.findOne({ email: email });
+ 
+    if (!user) {
+       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+    }
+ 
+    if (!user.otpToken || user.otpToken === '') {
+       throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'No OTP token found. Please request a new password reset OTP.'
+       );
+    }
+ 
+    const decodedOtpData = verifyToken(
+       user.otpToken as string,
+       config.jwt_otp_secret as string
+    );
+ 
+    if (!decodedOtpData) {
+       throw new AppError(
+          StatusCodes.FORBIDDEN,
+          'OTP has expired or is invalid'
+       );
+    }
+ 
+    if (decodedOtpData.otp !== otp) {
+       throw new AppError(StatusCodes.FORBIDDEN, 'Invalid OTP');
+    }
+ 
+    user.otpToken = null;
+    await user.save();
+ 
+    const resetToken = jwt.sign({ email }, config.jwt_pass_reset_secret as string, {
+       expiresIn: config.jwt_pass_reset_expires_in,
+    });
+ 
+    // Return the reset token
+    return {
+       resetToken
+    };
+ 
+}
+
+
+const resetPassword = async ({
+    token,
+    newPassword,
+ }: {
+    token: string;
+    newPassword: string;
+ }) => {
+ 
+    const session: ClientSession = await User.startSession();
+ 
+    try {
+       session.startTransaction();
+ 
+       const decodedData = verifyToken(
+          token as string,
+          config.jwt_pass_reset_secret as string
+       );
+ 
+       const user = await User.findOne({ email: decodedData.email, isActive: true }).session(session);
+ 
+       if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+       }
+ 
+       const hashedPassword = await bcrypt.hash(
+          String(newPassword),
+          Number(config.bcrypt_salt_rounds)
+       );
+ 
+       await User.updateOne({ email: user.email }, { password: hashedPassword }).session(
+          session
+       );
+ 
+       await session.commitTransaction();
+ 
+       return {
+          message: 'Password changed successfully',
+       };
+    } catch (error) {
+       await session.abortTransaction();
+       throw error;
+    } finally {
+       session.endSession();
+    }
+};
+
 
 export const AuthServices = {
-    loginUserFromDB,
-    refreshTokenFromDB
+    loginUser,
+    refreshToken,
+    changePassword,
+    forgotPassword,
+    verifyOTP,
+    resetPassword,
 }

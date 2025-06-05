@@ -17,7 +17,7 @@ app.use(cookieParser());
 app.use(cors({ origin: ['https://bookshopfrontend-eight.vercel.app'], credentials: true }));
 
 app.get('/', (req, res) => {
-  res.send('Hello PH Team');
+  res.send('Book Shop Api');
 })
 
 app.use('/api', router);

@@ -8,89 +8,129 @@ import bcrypt from "bcrypt";
 
 
 
-export const createUserIntoDB = async (file: any | undefined, payload: Partial<TUser>): Promise<TUser> => {
-    try {
-        payload.password = payload.password || config.default_pass;
-        payload.role = payload.role || "user";
+const registerUser = async (userData: IUser) => {
+  const session = await mongoose.startSession();
 
-        
-        if (!file || !file.buffer) {
-            throw new Error('No file provided or file is empty');
-        }
+  try {
+     session.startTransaction();
 
-        const imageName = payload.name?.replace(/\s+/g, '_') || `user_${Date.now()}`;
-        const imageUrl = await sendImageToCloudinary(imageName, file.buffer);
+     if ([UserRole.ADMIN].includes(userData.role)) {
+        throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Invalid role. Only User is allowed.');
+     }
 
-        if (imageUrl && imageUrl.secure_url) {
-            payload.profileImage = imageUrl.secure_url;
-        } else {
-            console.warn('Image upload failed, profileImage will not be set.');
-        }
+     // Check if the user already exists by email
+     const existingUser = await User.findOne({ email: userData.email }).session(session);
+     if (existingUser) {
+        throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
+     }
 
-        // Save user to database
-        const result = await User.create(payload);
-        return result;
-    } catch (error) {
-        console.error('Error creating user in DB:', error);
-        throw error;
-    }
+     // Create the user
+     const user = new User(userData);
+     const createdUser = await user.save({ session });
+
+     const profile = new Customer({
+        user: createdUser._id,
+     });
+
+     await profile.save({ session });
+
+     await session.commitTransaction();
+
+     return await AuthService.loginUser({ email: createdUser.email, password: userData.password, clientInfo: userData.clientInfo });
+  } catch (error) {
+     if (session.inTransaction()) {
+        await session.abortTransaction();
+     }
+     throw error;
+  } finally {
+     session.endSession();
+  }
 };
 
 
-const getUsersFromDB = async () => {
-    const result = await User.find();
-    return result;
-}
+const getAllUser = async (query: Record<string, unknown>) => {
+  const UserQuery = new QueryBuilder(User.find(), query)
+     .search(UserSearchableFields)
+     .filter()
+     .sort()
+     .paginate()
+     .fields();
 
-const getUserByIDDB = async (id: string) => {
-    try {
-        const objectId = new Types.ObjectId(id);
-
-        const result = await User.aggregate([{ $match: {_id: objectId }}])
-
-        return result;
-    } catch (error) {
-        console.log(error);
-    }
-}
-
-export const updateProfilesFromDB = async (
-    id: string,
-    payload: Partial<TUser>,
-    file: Express.Multer.File | undefined
-  ): Promise<TUser | null> => {
-    try {
-      const objectId = new Types.ObjectId(id);
-  
-
-      if (payload.password) {
-        payload.password = await bcrypt.hash(payload.password, Number(config.bcrypt_salt_rounds));
-      }
-
-      if (file && file.buffer) {
-        const imageName = payload.name?.replace(/\s+/g, "_") || `user_${Date.now()}`;
-        const imageUrl = await sendImageToCloudinary(imageName, file.buffer);
-  
-        if (imageUrl && imageUrl.secure_url) {
-          payload.profileImage = imageUrl.secure_url;
-        } else {
-          console.warn("Image upload failed, profileImage will not be updated.");
-        }
-      }
-  
-      const result = await User.findByIdAndUpdate(objectId, { $set: payload }, { new: true });
-  
-      if (!result) {
-        throw new Error("User not found");
-      }
-  
-      return result;
-    } catch (error) {
-      console.error("Error updating user:", error);
-      throw new Error("Failed to update user");
-    }
+  const result = await UserQuery.modelQuery;
+  const meta = await UserQuery.countTotal();
+  return {
+     result,
+     meta,
   };
+};
+
+
+const myProfile = async (authUser: IJwtPayload) => {
+  const isUserExists = await User.findById(authUser.userId);
+  if (!isUserExists) {
+     throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
+  }
+  if (!isUserExists.isActive) {
+     throw new AppError(StatusCodes.BAD_REQUEST, "User is not active!");
+  }
+
+  const profile = await Customer.findOne({ user: isUserExists._id });
+
+
+  return {
+     ...isUserExists.toObject(),
+     profile: profile || null
+  }
+
+}
+
+const updateProfile = async (
+  payload: Partial<ICustomer>,
+  authUser: IJwtPayload
+) => {
+  const isUserExists = await User.findById(authUser.userId);
+
+  if (!isUserExists) {
+     throw new AppError(StatusCodes.NOT_FOUND, "User not found!");
+  }
+  if (!isUserExists.isActive) {
+     throw new AppError(StatusCodes.BAD_REQUEST, "User is not active!");
+  }
+
+  if (file && file.path) {
+     payload.photo = file.path;
+  }
+
+  const result = await Customer.findOneAndUpdate(
+     { user: authUser.userId },
+     payload,
+     {
+        new: true,
+     }
+  ).populate('user');
+
+  return result;
+};
+
+
+const updateUserStatus = async (userId: string) => {
+  const user = await User.findById(userId);
+
+  console.log('comes here');
+  if (!user) {
+     throw new AppError(StatusCodes.NOT_FOUND, 'User is not found');
+  }
+
+  user.isActive = !user.isActive;
+  const updatedUser = await user.save();
+  return updatedUser;
+};
+
 
 export const UserServices = {
-    createUserIntoDB, getUsersFromDB, updateProfilesFromDB, getUserByIDDB
-}
+  registerUser,
+  getAllUser,
+  myProfile,
+  updateUserStatus,
+  updateProfile,
+};
